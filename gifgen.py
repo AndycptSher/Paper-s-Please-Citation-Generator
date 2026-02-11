@@ -1,8 +1,10 @@
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
     
-def _papers_please_font(size=20):
-    return ImageFont.truetype("fonts/megan_serif/Megan_Serif.ttf", size)
+_Title_Font = ImageFont.truetype("fonts/megan_serif/Megan_Serif.ttf", 15)
+_Body_Font = ImageFont.truetype("fonts/bm_mini/BMmini.TTF", 15)
+_Background = Image.open("templates/template.webp")
+_Foreground_Color = (90, 85, 89)
 
 
 def _text_size(draw, text, font):
@@ -26,32 +28,24 @@ def _text_size(draw, text, font):
         return (len(text) * (font.size if hasattr(font, 'size') else 10), int((font.size if hasattr(font, 'size') else 10) * 1.2))
 
 
-def _make_paper():
-    # w: 366 h: 160
-    im = Image.open("templates/template.webp")
-    return im
-
-
 def _draw_fields(base, title, outcome, reason):
     im = base.copy()
     d = ImageDraw.Draw(im)
-    W = 366
-    H = 160
-    f_body = ImageFont.truetype("fonts/bm_mini/BMmini.TTF", 15)
-    foreground = (90, 85, 89)
+    W = im.width
+    H = im.height
 
     d.fontmode = "1" # ensure crisp text rendering without anti-aliasing
-    d.text((20, 7), title, font=_papers_please_font(15), fill=foreground)
+    d.text((20, 7), title, font=_Title_Font, fill=_Foreground_Color)
 
     # wrap reason
-    max_w = im.width - 60
+    max_w = W - 60
     lines = []
     for line in reason.splitlines():
         words = line.split()
         cur = ""
         for w in words:
             test = (cur + " " + w).strip()
-            if _text_size(d, test, f_body)[0] <= max_w:
+            if _text_size(d, test, _Body_Font)[0] <= max_w:
                 cur = test
             else:
                 lines.append(cur)
@@ -62,22 +56,10 @@ def _draw_fields(base, title, outcome, reason):
     # start of the body text
     y = 40
     for line in lines:
-        d.text((20, y), line, font=f_body, fill=foreground)
+        d.text((20, y), line, font=_Body_Font, fill=_Foreground_Color)
         y += 20
-    _, _, w, h = d.textbbox((20, 120), outcome, font=f_body)
-    d.text(((W-w)/2, 115+(H-h)/2), outcome, font=f_body, fill=foreground)
-    return im
-
-
-def _make_square(size=200, color=(160,10,10,255), border=8):
-    """Return a square image with transparent background and colored square (with optional border)."""
-    im = Image.new('RGBA', (size, size), (0,0,0,0))
-    d = ImageDraw.Draw(im)
-    # outer filled square
-    d.rectangle([ (0,0), (size, size) ], fill=color)
-    # inner transparent center to create a hollow-ish look if border > 0
-    if border and border*2 < size:
-        d.rectangle([ (border, border), (size-border-1, size-border-1) ], fill=(0,0,0,0))
+    _, _, w, h = d.textbbox((20, 120), outcome, font=_Body_Font)
+    d.text(((W-w)/2, 115+(H-h)/2), outcome, font=_Body_Font, fill=_Foreground_Color)
     return im
 
 
@@ -108,7 +90,7 @@ def generate_frames(doc, start_y, target_y, time=28):
     return frames
 
 def generate_citation_gif(title, penalty, reason):
-    base = _make_paper()
+    base = _Background
     doc = _draw_fields(base, title, penalty, reason)
 
     frames = []
