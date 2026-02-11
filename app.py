@@ -12,12 +12,11 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-	name = request.form.get('name', 'ANONYMOUS')
-	idnum = request.form.get('idnum', '000-000')
+	title = request.form.get('title', 'ANONYMOUS')
+	penalty = request.form.get('penalty', '000-000')
 	reason = request.form.get('reason', 'No reason provided')
-	stamp = request.form.get('stamp', 'DENIED')
 
-	bio = gifgen.generate_citation_gif(name, idnum, reason, stamp)
+	bio = gifgen.generate_citation_gif(title, penalty, reason)
 	bio.seek(0)
 	return send_file(bio, mimetype='image/gif', as_attachment=False, download_name='citation.gif')
 

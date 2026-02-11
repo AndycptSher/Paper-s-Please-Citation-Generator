@@ -15,21 +15,14 @@
     <div class="card">
       <h2>Citation GIF (Papers, Please style)</h2>
       <form action="/generate" method="post">
-        <label>Name
-          <input name="name" value="JOHN DOE" />
+        <label>Title
+          <input name="title" value="M. O. A. CITATION"/>
         </label>
-        <label>ID
-          <input name="idnum" value="123-456" />
+        <label>Penalty
+          <input name="penalty" value="WARNING ISSUED - NO PENALTY" />
         </label>
         <label>Reason
           <textarea name="reason">Entry without valid papers</textarea>
-        </label>
-        <label>Stamp
-          <select name="stamp">
-            <option>APPROVED</option>
-            <option>DENIED</option>
-            <option>REVOKED</option>
-          </select>
         </label>
         <button type="submit">Generate GIF</button>
       </form>
