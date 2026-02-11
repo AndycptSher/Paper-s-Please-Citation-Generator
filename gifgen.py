@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
     
 def _papers_please_font(size=20):
-    return ImageFont.truetype("megan_serif/Megan_Serif.ttf", size)
+    return ImageFont.truetype("fonts/megan_serif/Megan_Serif.ttf", size)
 
 
 def _text_size(draw, text, font):
@@ -28,7 +28,7 @@ def _text_size(draw, text, font):
 
 def _make_paper():
     # w: 366 h: 160
-    im = Image.open("template.webp")
+    im = Image.open("templates/template.webp")
     return im
 
 
@@ -37,7 +37,7 @@ def _draw_fields(base, title, outcome, reason):
     d = ImageDraw.Draw(im)
     W = 366
     H = 160
-    f_body = ImageFont.truetype("bm_mini/BMmini.TTF", 15)
+    f_body = ImageFont.truetype("fonts/bm_mini/BMmini.TTF", 15)
     foreground = (90, 85, 89)
 
     d.fontmode = "1" # ensure crisp text rendering without anti-aliasing
