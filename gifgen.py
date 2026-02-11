@@ -1,13 +1,8 @@
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-import math
-
-
-def _load_font(size=20):
-    try:
-        return ImageFont.truetype("arial.ttf", size)
-    except Exception:
-        return ImageFont.load_default()
+    
+def _papers_please_font(size=20):
+    return ImageFont.truetype("megan_serif/Megan_Serif.ttf", size)
 
 
 def _text_size(draw, text, font):
@@ -31,90 +26,102 @@ def _text_size(draw, text, font):
         return (len(text) * (font.size if hasattr(font, 'size') else 10), int((font.size if hasattr(font, 'size') else 10) * 1.2))
 
 
-def _make_paper(width=600, height=400):
-    im = Image.new('RGBA', (width, height), (240, 235, 220, 255))
-    d = ImageDraw.Draw(im)
-    # subtle texture lines
-    for y in range(20, height, 24):
-        d.line([(10, y), (width-10, y)], fill=(230, 225, 200), width=1)
+def _make_paper():
+    # w: 366 h: 160
+    im = Image.open("template.webp")
     return im
 
 
-def _draw_fields(base, name, idnum, reason):
+def _draw_fields(base, title, outcome, reason):
     im = base.copy()
     d = ImageDraw.Draw(im)
-    f_title = _load_font(28)
-    f_body = _load_font(18)
+    W = 366
+    H = 160
+    f_body = ImageFont.truetype("bm_mini/BMmini.TTF", 15)
+    foreground = (90, 85, 89)
 
-    d.text((30, 20), "CITATION", font=f_title, fill=(40, 40, 40))
-    d.text((30, 70), f"Name: {name}", font=f_body, fill=(30, 30, 30))
-    d.text((30, 110), f"ID: {idnum}", font=f_body, fill=(30, 30, 30))
-    d.text((30, 150), "Reason:", font=f_body, fill=(30, 30, 30))
+    d.fontmode = "1" # ensure crisp text rendering without anti-aliasing
+    d.text((20, 7), title, font=_papers_please_font(15), fill=foreground)
 
     # wrap reason
     max_w = im.width - 60
     lines = []
-    words = reason.split()
-    cur = ""
-    for w in words:
-        test = (cur + " " + w).strip()
-        if _text_size(d, test, f_body)[0] <= max_w:
-            cur = test
-        else:
+    for line in reason.splitlines():
+        words = line.split()
+        cur = ""
+        for w in words:
+            test = (cur + " " + w).strip()
+            if _text_size(d, test, f_body)[0] <= max_w:
+                cur = test
+            else:
+                lines.append(cur)
+                cur = w
+        if cur:
             lines.append(cur)
-            cur = w
-    if cur:
-        lines.append(cur)
 
-    y = 180
+    # start of the body text
+    y = 40
+    print(lines)
     for line in lines:
-        d.text((30, y), line, font=f_body, fill=(25, 25, 25))
-        y += 26
-
-    # signature box
-    d.rectangle([ (im.width-220, im.height-110), (im.width-30, im.height-40) ], outline=(100,100,100))
-    d.text((im.width-210, im.height-105), "Officer: Inspector", font=f_body, fill=(30,30,30))
+        d.text((20, y), line, font=f_body, fill=foreground)
+        y += 20
+    _, _, w, h = d.textbbox((20, 120), outcome, font=f_body)
+    d.text(((W-w)/2, 115+(H-h)/2), outcome, font=f_body, fill=foreground)
     return im
 
 
-def _make_stamp(stamp_text, size=200):
+def _make_square(size=200, color=(160,10,10,255), border=8):
+    """Return a square image with transparent background and colored square (with optional border)."""
     im = Image.new('RGBA', (size, size), (0,0,0,0))
     d = ImageDraw.Draw(im)
-    f = _load_font(int(size*0.18))
-    # red circle
-    d.ellipse((0,0,size,size), outline=(160,10,10), width=8)
-    w, h = _text_size(d, stamp_text, f)
-    d.text(((size-w)/2, (size-h)/2), stamp_text, font=f, fill=(160,10,10))
-    # rotate a bit
-    return im.rotate(-12, resample=Image.BICUBIC, expand=True)
+    # outer filled square
+    d.rectangle([ (0,0), (size, size) ], fill=color)
+    # inner transparent center to create a hollow-ish look if border > 0
+    if border and border*2 < size:
+        d.rectangle([ (border, border), (size-border-1, size-border-1) ], fill=(0,0,0,0))
+    return im
 
 
-def generate_citation_gif(name, idnum, reason, stamp_text):
+def generate_citation_gif(title, penalty, reason):
     base = _make_paper()
-    doc = _draw_fields(base, name, idnum, reason)
+    doc = _draw_fields(base, title, penalty, reason)
 
-    stamp = _make_stamp(stamp_text.upper())
+    # create a solid square (we ignore the text for this visual effect)
+    square_size = int(min(doc.width, doc.height) * 0.28)
+    square = _make_square(square_size, color=(160,10,10,255), border=6)
 
     frames = []
-    # initial frames: no stamp
-    for i in range(6):
-        frames.append(doc.copy())
 
-    # stamping animation: move stamp down and fade
-    for t in range(12):
-        f = doc.copy()
-        ox = int((f.width - stamp.width) / 2)
-        oy = int(f.height/2 - stamp.height/2 + t*6)
+    # animation parameters
+    total = 28
+    start_y = doc.height + square.height  # well below the frame
+    target_y = int(doc.height/2 - square.height/2)
+    center_x = int((doc.width - square.width) / 2)
+
+    # first easing
+    for t in range(total):
+        f = doc.copy().convert('RGBA')
         layer = Image.new('RGBA', f.size, (0,0,0,0))
-        layer.paste(stamp, (ox, oy), stamp)
-        out = Image.alpha_composite(f.convert('RGBA'), layer)
-        # slight blur on later frames
-        if t > 6:
-            out = out.filter(ImageFilter.GaussianBlur(radius=(t-6)/3))
+
+        progress = t / float(max(1, total-1))
+        # ease-out movement
+        ease = 1 - (1 - progress)**2
+        y = int(start_y - ease * (start_y - target_y))
+
+        ox = center_x
+        oy = y
+
+        # prepare square with adjusted alpha
+        # sq = square.copy()
+
+        # layer.paste(sq, (ox, oy), sq)
+
+        out = Image.alpha_composite(f, layer)
+
         frames.append(out)
 
     # hold final
-    for i in range(8):
+    for i in range(10):
         frames.append(frames[-1])
 
     # save to BytesIO
