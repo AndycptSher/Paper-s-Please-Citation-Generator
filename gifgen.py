@@ -1,7 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
     
-_Title_Font = ImageFont.truetype("fonts/megan_serif/Megan_Serif.ttf", 15)
+_Title_Font = ImageFont.truetype("fonts/megan_serif/Megan_Serif.ttf", 16)
 _Body_Font = ImageFont.truetype("fonts/bm_mini/BMmini.TTF", 15)
 _Background = Image.open("templates/template.webp")
 _Foreground_Color = (90, 85, 89)
