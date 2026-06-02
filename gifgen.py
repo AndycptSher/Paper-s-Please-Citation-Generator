@@ -63,7 +63,7 @@ def _draw_fields(base, title, outcome, reason):
     return im
 
 
-def generate_frames(doc, start_y, target_y, time=28):
+def _generate_frames(doc, start_y, target_y, time=28):
     frames = []
 
     # animate the document floating in from below to its final position
@@ -95,22 +95,22 @@ def generate_citation_gif(title, penalty, reason):
 
     frames = []
 
-    frames.extend(generate_frames(doc,
+    frames.extend(_generate_frames(doc,
                                   start_y=doc.height,
                                   target_y=int(doc.height*3/5),
                                   time=10))
     
-    frames.extend(generate_frames(doc,
+    frames.extend(_generate_frames(doc,
                                   start_y=int(doc.height*3/5),
                                   target_y=int(doc.height*2/5),
                                   time=10))
     
-    frames.extend(generate_frames(doc,
+    frames.extend(_generate_frames(doc,
                                   start_y=int(doc.height*2/5),
                                   target_y=int(doc.height*1/5),
                                   time=10))
     
-    frames.extend(generate_frames(doc,
+    frames.extend(_generate_frames(doc,
                                   start_y=int(doc.height*1/5),
                                   target_y=0,
                                   time=10))

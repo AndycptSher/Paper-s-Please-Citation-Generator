@@ -10,11 +10,13 @@ Requirements
 python -m pip install -r requirements.txt
 ```
 
-Run (PowerShell):
+Run:
 
 ```powershell
-#$env:FLASK_APP = 'app.py'; python -m flask run
-python app.py
+python cli.py --output path/to/citation.gif
 ```
 
-Open http://127.0.0.1:5000 in your browser.
+Help:
+```powershell
+python cli.py -h
+```
